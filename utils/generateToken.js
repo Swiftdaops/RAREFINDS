@@ -5,10 +5,12 @@ const generateToken = (res, userId) => {
     expiresIn: process.env.JWT_COOKIE_EXPIRES_IN || '7d',
   });
 
+  const isSecure = process.env.NODE_ENV === 'production' || process.env.HTTPS === 'true';
+
   res.cookie('jwt', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax',
+    secure: !!isSecure,
+    sameSite: isSecure ? 'none' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 };

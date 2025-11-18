@@ -37,10 +37,11 @@ const login = asyncHandler(async (req, res) => {
 });
 
 const logout = asyncHandler(async (req, res) => {
+  const isSecure = process.env.NODE_ENV === 'production' || process.env.HTTPS === 'true';
   res.clearCookie('jwt', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax',
+    secure: !!isSecure,
+    sameSite: isSecure ? 'none' : 'lax',
   });
   res.json({ message: 'Logged out' });
 });
