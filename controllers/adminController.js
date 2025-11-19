@@ -1,44 +1,36 @@
 const asyncHandler = require('express-async-handler');
-const Joi = require('joi');
-const User = require('../models/User');
-const generateToken = require('../utils/generateToken');
+const Owner = require('../models/Owner');
+const jwt = require('jsonwebtoken');
 
-const loginSchema = Joi.object({
-  username: Joi.string().min(3).required(),
-  password: Joi.string().min(6).required(),
-});
-
-
-const seedAdmin = asyncHandler(async () => {
-  const username = process.env.ADMIN_USERNAME;
-  const password = process.env.ADMIN_PASSWORD;
-  if (!username || !password) return;
-  const existing = await User.findOne({ username });
-  if (!existing) {
-    await User.create({ username, password });
-    console.log('Seeded admin user');
-  }
-});
-
+// Login using environment variables only (no DB user needed)
 const login = asyncHandler(async (req, res) => {
-  const { error, value } = loginSchema.validate(req.body);
-  if (error) {
-    res.status(400);
-    throw new Error(error.details[0].message);
+  const { username, password } = req.body;
+  const envUser = process.env.APPADMIN_USERNAME || process.env.ADMIN_USERNAME;
+  const envPass = process.env.APPADMIN_PASSWORD || process.env.ADMIN_PASSWORD;
+  if (!envUser || !envPass) {
+    res.status(500);
+    throw new Error('Admin credentials not configured');
   }
-  const { username, password } = value;
-  const user = await User.findOne({ username }).select('+password');
-  if (!user || !(await user.matchPassword(password))) {
+  if (username !== envUser || password !== envPass) {
     res.status(401);
     throw new Error('Invalid credentials');
   }
-  generateToken(res, user._id.toString());
-  res.json({ message: 'Logged in' });
+  const token = jwt.sign({ role: 'admin', username: envUser }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_COOKIE_EXPIRES_IN || '7d',
+  });
+  const isSecure = process.env.NODE_ENV === 'production' || process.env.HTTPS === 'true';
+  res.cookie('admin_token', token, {
+    httpOnly: true,
+    secure: !!isSecure,
+    sameSite: isSecure ? 'none' : 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+  res.json({ message: 'Admin logged in', admin: { username: envUser } });
 });
 
 const logout = asyncHandler(async (req, res) => {
   const isSecure = process.env.NODE_ENV === 'production' || process.env.HTTPS === 'true';
-  res.clearCookie('jwt', {
+  res.clearCookie('admin_token', {
     httpOnly: true,
     secure: !!isSecure,
     sameSite: isSecure ? 'none' : 'lax',
@@ -47,7 +39,45 @@ const logout = asyncHandler(async (req, res) => {
 });
 
 const me = asyncHandler(async (req, res) => {
-  res.json({ user: req.user });
+  if (!req.admin) {
+    res.status(401);
+    throw new Error('Not authenticated');
+  }
+  res.json({ admin: { username: req.admin.username } });
 });
 
-module.exports = { login, logout, me, seedAdmin };
+// --- Owner management (admin only) ---
+const listOwners = asyncHandler(async (req, res) => {
+  const { status } = req.query;
+  const filter = {};
+  if (status && ['pending','approved','rejected'].includes(status)) filter.status = status;
+  const owners = await Owner.find(filter).select('-passwordHash').sort({ createdAt: -1 });
+  res.json(owners);
+});
+
+const approveOwner = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const owner = await Owner.findById(id);
+  if (!owner) { res.status(404); throw new Error('Owner not found'); }
+  owner.status = 'approved';
+  owner.approvedAt = new Date();
+  owner.approvedBy = (req.admin && req.admin.username) || 'admin';
+  await owner.save();
+  const safe = owner.toObject();
+  delete safe.passwordHash;
+  res.json(safe);
+});
+
+const rejectOwner = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const owner = await Owner.findById(id);
+  if (!owner) { res.status(404); throw new Error('Owner not found'); }
+  owner.status = 'rejected';
+  owner.approvedBy = (req.admin && req.admin.username) || 'admin';
+  await owner.save();
+  const safe = owner.toObject();
+  delete safe.passwordHash;
+  res.json(safe);
+});
+
+module.exports = { login, logout, me, listOwners, approveOwner, rejectOwner };
