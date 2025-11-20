@@ -3,6 +3,7 @@ const Joi = require('joi');
 const bcrypt = require('bcrypt');
 const Owner = require('../models/Owner');
 const generateOwnerToken = require('../utils/generateOwnerToken');
+// (Note: export list updated below – this file now defines logout)
 
 const signupSchema = Joi.object({
   name: Joi.string().min(2).required(),
@@ -34,11 +35,15 @@ const signup = asyncHandler(async (req, res) => {
   }
   const salt = await bcrypt.genSalt(10);
   const passwordHash = await bcrypt.hash(value.password, salt);
+  // Normalize whatsappNumber: strip non-digits and leading '+'
+  const normalizedWhatsapp = (value.whatsappNumber || '')
+    .replace(/[^0-9+]/g, '')
+    .replace(/^\+/, '');
   const owner = await Owner.create({
     name: value.name,
     storeName: value.storeName,
     email: value.email,
-    whatsappNumber: value.whatsappNumber,
+    whatsappNumber: normalizedWhatsapp,
     phone: value.phone,
     bio: value.bio,
     website: value.website,
@@ -46,7 +51,7 @@ const signup = asyncHandler(async (req, res) => {
     status: 'pending',
   });
   res.status(201).json({
-    message: "Registration received. Your store will be reviewed by JOHNBOOKS admin.",
+    message: 'Registration received. Your store will be reviewed by JOHNBOOKS admin.',
     ownerId: owner._id,
   });
 });
@@ -107,4 +112,15 @@ const me = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { signup, login, me };
+// Owner logout: clear the owner_jwt cookie
+const logout = asyncHandler(async (req, res) => {
+  res.clearCookie('owner_jwt', {
+    httpOnly: true,
+    sameSite: 'strict',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+  });
+  res.json({ message: 'Owner logged out' });
+});
+
+module.exports = { signup, login, me, logout };

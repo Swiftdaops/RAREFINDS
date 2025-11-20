@@ -17,6 +17,7 @@ const protect = asyncHandler(async (req, res, next) => {
       res.status(401);
       throw new Error('Not authorized, user not found');
     }
+    req.userRole = decoded.role || 'admin';
     next();
   } catch (error) {
     res.status(401);

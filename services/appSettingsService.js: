@@ -1,0 +1,29 @@
+// services/appSettingsService.js
+import { AppSettings } from "../models/AppSettings.js";
+
+const THEME_KEY = "theme";
+
+export async function getCurrentTheme() {
+  const doc = await AppSettings.findOne({ key: THEME_KEY });
+  if (!doc) {
+    // default if nothing in DB yet
+    return "dark";
+  }
+  return doc.value?.theme || "dark";
+}
+
+export async function setCurrentTheme(theme) {
+  if (!["dark", "light"].includes(theme)) {
+    throw new Error("Invalid theme value");
+  }
+
+  const value = { theme };
+
+  const doc = await AppSettings.findOneAndUpdate(
+    { key: THEME_KEY },
+    { value },
+    { upsert: true, new: true }
+  );
+
+  return doc.value.theme;
+}

@@ -15,6 +15,11 @@ const ebookSchema = new mongoose.Schema(
       url: { type: String, required: true },
       public_id: { type: String, required: true },
     },
+    // Nullable for legacy admin-created ebooks; set when owners are used.
+    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Owner', default: null },
+    ownerStoreName: { type: String, default: '' },
+    ownerWhatsapp: { type: String, default: '' },
+    isPublished: { type: Boolean, default: true },
   },
   { timestamps: true }
 );

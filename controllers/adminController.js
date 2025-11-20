@@ -4,7 +4,10 @@ const jwt = require('jsonwebtoken');
 
 // Login using environment variables only (no DB user needed)
 const login = asyncHandler(async (req, res) => {
-  const { username, password } = req.body;
+  let { username, password } = req.body;
+  // Normalize / trim to avoid accidental whitespace issues
+  if (typeof username === 'string') username = username.trim();
+  if (typeof password === 'string') password = password.trim();
   const envUser = process.env.APPADMIN_USERNAME || process.env.ADMIN_USERNAME;
   const envPass = process.env.APPADMIN_PASSWORD || process.env.ADMIN_PASSWORD;
   if (!envUser || !envPass) {
@@ -12,6 +15,7 @@ const login = asyncHandler(async (req, res) => {
     throw new Error('Admin credentials not configured');
   }
   if (username !== envUser || password !== envPass) {
+    console.warn('Admin login failed: provided=', username, ' expected=', envUser);
     res.status(401);
     throw new Error('Invalid credentials');
   }

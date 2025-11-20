@@ -1,18 +1,28 @@
 const express = require('express');
 const dotenv = require('dotenv');
+// Load env vars immediately
+dotenv.config();
+
 const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 const securityMiddleware = require('./middleware/security');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 const { seedAdmin } = require('./controllers/adminController');
 
-dotenv.config();
+// Debug Cloudinary Config
+console.log('--- Cloudinary Config Check ---');
+console.log('Cloud Name:', process.env.CLOUDINARY_CLOUD_NAME || 'MISSING');
+console.log('API Key:', process.env.CLOUDINARY_API_KEY ? '***' + process.env.CLOUDINARY_API_KEY.slice(-4) : 'MISSING');
+console.log('API Secret:', process.env.CLOUDINARY_API_SECRET ? '***' + process.env.CLOUDINARY_API_SECRET.slice(-4) : 'MISSING');
+console.log('-------------------------------');
 
 connectDB().then(() => seedAdmin()).catch(() => {});
 
 const os = require('os');
 const app = express();
 app.set('trust proxy', 1);
+
+const path = require('path');
 
 // Core middleware
 app.use(express.json());
@@ -25,10 +35,28 @@ securityMiddleware(app);
 // Routes
 const adminRoutes = require('./routes/admin');
 const ebookRoutes = require('./routes/ebook');
+const ownerRoutes = require('./routes/owner');
+const publicRoutes = require('./routes/public');
+// App settings routes (feature: mounted under /api)
+const appSettingsRoutes = require('./routes/appSettingsRoutes');
+app.use('/api/admin', adminRoutes);
+
+// Log route exports types to help debug middleware issues
+console.log('adminRoutes ->', typeof adminRoutes);
+console.log('ebookRoutes ->', typeof ebookRoutes);
+console.log('ownerRoutes ->', typeof ownerRoutes);
+console.log('publicRoutes ->', typeof publicRoutes);
+console.log('appSettingsRoutes ->', typeof appSettingsRoutes);
 
 app.use('/api/admin', adminRoutes);
-app.use('/api/ebooks', ebookRoutes);
+app.use('/api/ebooks', ebookRoutes); // admin-only CRUD
+app.use('/api/owners', ownerRoutes); // signup/login/me
+app.use('/api/public', publicRoutes); // public listing/search
+// Mount app settings routes (e.g., /api/settings/...)
+app.use('/api', appSettingsRoutes);
 
+// Serve local uploads when Cloudinary is not configured
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 

@@ -11,11 +11,18 @@ const corsOptions = {
   origin: function (origin, callback) {
     // Allow non-browser requests like curl/postman (no origin)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+    // Log for debugging
+    console.log('CORS origin:', origin);
+    // In development allow localhost origins to make local frontend easier
+    if ((process.env.NODE_ENV || 'development') !== 'production') {
+      if (origin && origin.includes('localhost')) return callback(null, true);
     }
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    }
+    console.warn('Blocked by CORS, origin:', origin);
+    // Deny explicitly (CORS middleware will send an error)
+    return callback(new Error('Not allowed by CORS'));
   },
   credentials: true, // Allow httpOnly cookies to be sent
 };
@@ -25,6 +32,8 @@ const securityMiddleware = (app) => {
 
   // Cross-Origin Resource Sharing using CLIENT_ORIGIN
   app.use(cors(corsOptions));
+  // Ensure preflight requests receive CORS headers
+  app.options('*', cors(corsOptions));
 
   const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,

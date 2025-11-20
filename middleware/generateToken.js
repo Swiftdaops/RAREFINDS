@@ -2,7 +2,8 @@
 const jwt = require('jsonwebtoken');
 
 const generateToken = (res, userId) => {
-  const token = jwt.sign({ userId }, process.env.JWT_SECRET, {
+  // Include role=admin to distinguish in downstream logic if expanded later
+  const token = jwt.sign({ userId, role: 'admin' }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_COOKIE_EXPIRES_IN,
   });
 
