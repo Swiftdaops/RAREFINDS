@@ -20,6 +20,10 @@ const corsOptions = {
     if (allowedOrigins.indexOf(origin) !== -1) {
       return callback(null, true);
     }
+    // Allow Netlify preview deployments (e.g. https://deploy-preview-123--rarefindsinternationalbookstore.netlify.app)
+    if (origin && origin.endsWith('--rarefindsinternationalbookstore.netlify.app')) {
+      return callback(null, true);
+    }
     console.warn('Blocked by CORS, origin:', origin);
     // Deny explicitly (CORS middleware will send an error)
     return callback(new Error('Not allowed by CORS'));
