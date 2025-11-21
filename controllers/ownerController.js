@@ -57,6 +57,10 @@ const signup = asyncHandler(async (req, res) => {
 });
 
 const login = asyncHandler(async (req, res) => {
+  // Trim email/password if strings
+  if (req.body.email && typeof req.body.email === 'string') req.body.email = req.body.email.trim();
+  if (req.body.password && typeof req.body.password === 'string') req.body.password = req.body.password.trim();
+
   const { error, value } = loginSchema.validate(req.body);
   if (error) {
     res.status(400);
