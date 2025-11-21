@@ -10,7 +10,21 @@ const requireOwner = asyncHandler(async (req, res, next) => {
     throw new Error('Not authorized, no owner token');
   }
   try {
-    const decoded = jwt.verify(token, process.env.OWNER_JWT_SECRET);
+    // Support transition period: attempt OWNER_JWT_SECRET first, then fallback to JWT_SECRET
+    const secrets = [process.env.OWNER_JWT_SECRET, process.env.JWT_SECRET].filter(Boolean);
+    let decoded;
+    for (const secret of secrets) {
+      try {
+        decoded = jwt.verify(token, secret);
+        break;
+      } catch (_) {
+        // try next secret
+      }
+    }
+    if (!decoded) {
+      res.status(401);
+      throw new Error('Owner token invalid');
+    }
     if (decoded.role !== 'owner') {
       res.status(403);
       throw new Error('Invalid owner role');
