@@ -12,7 +12,7 @@ function securityMiddleware(app) {
   const staticOrigins = [
     'http://localhost:5173',
     'http://localhost:5174',
-    'https://rarefinds.netlify.app',
+    'https://rarefindsintl.netlify.app',
     'https://rarefindsinternationalbookstore.netlify.app',
   ];
   const envOrigins = parseEnvOrigins();
