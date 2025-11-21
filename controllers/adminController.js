@@ -84,4 +84,13 @@ const rejectOwner = asyncHandler(async (req, res) => {
   res.json(safe);
 });
 
-module.exports = { login, logout, me, listOwners, approveOwner, rejectOwner };
+// Permanently delete an owner (admin only). Consider cascading in future.
+const deleteOwner = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const owner = await Owner.findById(id);
+  if (!owner) { res.status(404); throw new Error('Owner not found'); }
+  await owner.deleteOne();
+  res.json({ message: 'Owner deleted', id });
+});
+
+module.exports = { login, logout, me, listOwners, approveOwner, rejectOwner, deleteOwner };

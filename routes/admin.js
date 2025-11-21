@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { login, logout, me, listOwners, approveOwner, rejectOwner } = require('../controllers/adminController');
+const { login, logout, me, listOwners, approveOwner, rejectOwner, deleteOwner } = require('../controllers/adminController');
 const requireAdmin = require('../middleware/requireAdmin');
 
 // Auth
@@ -12,5 +12,6 @@ router.get('/me', requireAdmin, me);
 router.get('/owners', requireAdmin, listOwners);
 router.patch('/owners/:id/approve', requireAdmin, approveOwner);
 router.patch('/owners/:id/reject', requireAdmin, rejectOwner);
+router.delete('/owners/:id', requireAdmin, deleteOwner);
 
 module.exports = router;
