@@ -113,6 +113,7 @@ function logStep(label, resp) {
       currency: 'NGN',
       isPublished: true,
       coverImageUrl: 'https://placehold.co/300x400?text=Test',
+      coverImagePublicId: 'test_public_id_' + Date.now(),
     }
   });
   logStep('create', createResp);

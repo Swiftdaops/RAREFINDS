@@ -29,7 +29,7 @@
  */
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:5000';
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''; // provide to test admin login
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'Paul'; // provide to test admin login
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const OWNER_EMAIL = process.env.OWNER_EMAIL || ''; // provide to test owner login
 const OWNER_PASSWORD = process.env.OWNER_PASSWORD || '';
@@ -140,7 +140,7 @@ const endpoints = [
   { method: 'GET', path: '/api/app-settings/theme', auth: 'none' },
 
   // Admin auth
-  { method: 'POST', path: '/api/admin/login', auth: 'admin', body: () => ({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD }), requiresCreds: ['ADMIN_EMAIL','ADMIN_PASSWORD'] },
+  { method: 'POST', path: '/api/admin/login', auth: 'admin', body: () => ({ username: ADMIN_USERNAME, password: ADMIN_PASSWORD }), requiresCreds: ['ADMIN_USERNAME','ADMIN_PASSWORD'] },
   { method: 'GET', path: '/api/admin/me', auth: 'admin' },
   { method: 'GET', path: '/api/admin/owners', auth: 'admin' },
   // Owner auth

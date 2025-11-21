@@ -15,6 +15,8 @@ const createSchema = Joi.object({
   price: Joi.alternatives().try(Joi.number().min(0), priceSchema).required(),
   currency: Joi.string().min(1).optional(),
   isPublished: Joi.boolean().optional(),
+  coverImageUrl: Joi.string().uri().optional(),
+  coverImagePublicId: Joi.string().optional(),
 });
 
 const updateSchema = Joi.object({
@@ -24,6 +26,8 @@ const updateSchema = Joi.object({
   price: Joi.alternatives().try(Joi.number().min(0), priceSchema),
   currency: Joi.string().min(1),
   isPublished: Joi.boolean(),
+  coverImageUrl: Joi.string().uri().optional(),
+  coverImagePublicId: Joi.string().optional(),
 }).min(1);
 
 const listOwnerEbooks = asyncHandler(async (req, res) => {
