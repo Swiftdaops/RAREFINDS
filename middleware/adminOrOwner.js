@@ -22,7 +22,7 @@ module.exports = async function adminOrOwner(req, res, next) {
   const ownerToken = req.cookies && req.cookies.owner_jwt;
   if (ownerToken) {
     try {
-      const decoded = jwt.verify(ownerToken, process.env.JWT_SECRET);
+      const decoded = jwt.verify(ownerToken, process.env.OWNER_JWT_SECRET);
       if (decoded.role !== 'owner') {
         console.log('Token role is not owner:', decoded.role);
         return res.status(403).json({ error: 'Invalid owner role' });

@@ -10,7 +10,7 @@ const requireOwner = asyncHandler(async (req, res, next) => {
     throw new Error('Not authorized, no owner token');
   }
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.OWNER_JWT_SECRET);
     if (decoded.role !== 'owner') {
       res.status(403);
       throw new Error('Invalid owner role');
