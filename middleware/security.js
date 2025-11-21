@@ -6,6 +6,7 @@ function securityMiddleware(app) {
   const allowedOrigins = [
     'http://localhost:5173',          // Vite dev
     'https://rarefinds.netlify.app',  // your Netlify frontend (change to your real URL)
+    'https://rarefindsinternationalbookstore.netlify.app', // additional Netlify frontend
     'https://your-custom-domain.com', // if you map your own domain
   ];
 
