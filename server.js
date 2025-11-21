@@ -37,6 +37,8 @@ const adminRoutes = require('./routes/admin');
 const ebookRoutes = require('./routes/ebook');
 const ownerRoutes = require('./routes/owner');
 const publicRoutes = require('./routes/public');
+// Owner scoped ebook CRUD
+const ownerEbookRoutes = require('./routes/ownerEbooks');
 // App settings routes (feature: mounted under /api)
 const appSettingsRoutes = require('./routes/appSettingsRoutes');
 app.use('/api/admin', adminRoutes);
@@ -51,6 +53,7 @@ console.log('appSettingsRoutes ->', typeof appSettingsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/ebooks', ebookRoutes); // admin-only CRUD
 app.use('/api/owners', ownerRoutes); // signup/login/me
+app.use('/api/owner', ownerEbookRoutes); // owner authenticated ebooks CRUD (list/create/update/delete)
 app.use('/api/public', publicRoutes); // public listing/search
 // Mount app settings routes (e.g., /api/settings/...)
 app.use('/api', appSettingsRoutes);

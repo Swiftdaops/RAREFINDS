@@ -1,50 +1,14 @@
 const express = require('express');
-const asyncHandler = require('express-async-handler');
-
 const router = express.Router();
+const { getTheme, updateTheme } = require('../controllers/appSettingsController');
+const { protect, admin } = require('../middleware/auth');
 
-// Try to require the AppSettings model; if the project uses ESM for that file
-// the require may fail — we handle that and fall back to a default in-memory value.
-let AppSettings = null;
-try {
-	AppSettings = require('../models/AppSettings');
-} catch (err) {
-	// model not available via require (possibly ESM file) — we'll fall back
-	AppSettings = null;
-}
+// Public route to get theme
+// Mounted at /api, so this becomes /api/app-settings/theme
+router.get('/app-settings/theme', getTheme);
 
-const THEME_KEY = 'theme';
-
-// Public: get current theme
-router.get('/public/app-settings/theme', asyncHandler(async (req, res) => {
-	if (AppSettings && typeof AppSettings.findOne === 'function') {
-		const doc = await AppSettings.findOne({ key: THEME_KEY });
-		return res.json({ theme: doc?.value?.theme || 'dark' });
-	}
-
-	// fallback default
-	return res.json({ theme: process.env.DEFAULT_THEME || 'dark' });
-}));
-
-// Admin: update theme
-router.put('/admin/app-settings/theme', asyncHandler(async (req, res) => {
-	const { theme } = req.body || {};
-	if (!['dark', 'light'].includes(theme)) {
-		return res.status(400).json({ message: 'Invalid theme value' });
-	}
-
-	if (AppSettings && typeof AppSettings.findOneAndUpdate === 'function') {
-		const value = { theme };
-		const doc = await AppSettings.findOneAndUpdate(
-			{ key: THEME_KEY },
-			{ value },
-			{ upsert: true, new: true }
-		);
-		return res.json({ theme: doc.value.theme });
-	}
-
-	// Fallback: respond success but don't persist
-	return res.json({ theme });
-}));
+// Admin route to update theme
+// Mounted at /api, so this becomes /api/admin/app-settings/theme
+router.put('/admin/app-settings/theme', protect, admin, updateTheme);
 
 module.exports = router;

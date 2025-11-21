@@ -8,7 +8,9 @@
     "dev": "nodemon server.js",
     "seed": "node scripts/seedAdmin.js",
     "insert:books": "node scripts/insertBooks.js",
-    "edit:prices": "node scripts/editPrices.js"
+    "edit:prices": "node scripts/editPrices.js",
+    "test:apis": "node scripts/testEndpoints.js"
+    ,"owner:flow": "node scripts/ownerFlowTest.js"
   },
   "keywords": [
     "express",
