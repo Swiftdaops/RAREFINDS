@@ -28,6 +28,8 @@ const allowedOrigins = [
 ];
 // Allow Netlify deployed frontend origin
 allowedOrigins.push('https://rarefindsinternationalbookstore.netlify.app');
+// Allow Render-deployed owner frontend (used by VITE_OWNER_BACKEND_URL)
+allowedOrigins.push('https://rarefinds.onrender.com');
 app.use(
 	cors({
 		origin: (origin, cb) => {
