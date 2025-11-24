@@ -13,8 +13,10 @@ const generateToken = (res, ownerId) => {
     // Note: browsers require SameSite=None cookies to be Secure; for local development
     // some browsers will still accept SameSite=None with secure=false, but the
     // recommended long-term fix is to use a same-origin dev proxy (Vite proxy) or HTTPS.
+    // Always set SameSite=None so cross-site frontends (Netlify/Render) can send cookies.
+    // Ensure `secure` is true in non-development environments so browsers accept SameSite=None.
     secure: process.env.NODE_ENV !== 'development',
-    sameSite: process.env.NODE_ENV === 'development' ? 'none' : 'strict',
+    sameSite: 'none',
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });
 };
