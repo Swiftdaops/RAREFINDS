@@ -7,18 +7,23 @@ const path = require('path');
 
 const generateToken = (res, ownerId) => {
   const token = jwt.sign({ id: ownerId }, process.env.JWT_SECRET, { expiresIn: '30d' });
-  res.cookie('owner_jwt', token, {
+  const cookieOptions = {
     httpOnly: true,
-    // In development we allow cross-origin XHR from Vite -> backend by using SameSite=None.
-    // Note: browsers require SameSite=None cookies to be Secure; for local development
-    // some browsers will still accept SameSite=None with secure=false, but the
-    // recommended long-term fix is to use a same-origin dev proxy (Vite proxy) or HTTPS.
-    // Always set SameSite=None so cross-site frontends (Netlify/Render) can send cookies.
-    // Ensure `secure` is true in non-development environments so browsers accept SameSite=None.
-    secure: process.env.NODE_ENV !== 'development',
-    sameSite: 'none',
+    // Explicitly require Secure for cross-site cookies. Set unconditionally so
+    // that deployed builds always include the `Secure` attribute. Use the
+    // `FORCE_INSECURE_COOKIES=true` env var only for very specific local tests
+    // where you need non-secure cookies (NOT recommended for production).
+    secure: process.env.FORCE_INSECURE_COOKIES === 'true' ? false : true,
+    // Explicitly use capitalized `None` which is the canonical value for cross-site cookies.
+    sameSite: 'None',
     maxAge: 30 * 24 * 60 * 60 * 1000,
-  });
+  };
+  // Optionally set a cookie domain in production (helps some browsers when using a CDN)
+  if (process.env.COOKIE_DOMAIN && process.env.NODE_ENV === 'production') {
+    cookieOptions.domain = process.env.COOKIE_DOMAIN;
+  }
+
+  res.cookie('owner_jwt', token, cookieOptions);
 };
 
 // @route POST /api/owner/auth/signup
@@ -113,8 +118,20 @@ const login = asyncHandler(async (req, res) => {
     throw new Error('Account not approved yet');
   }
 
-  generateToken(res, owner._id);
-  res.status(200).json({ _id: owner._id, name: owner.name, email: owner.email, type: owner.type, profileImage: owner.profileImage });
+  // Create a token and set cookie, and also return the token in the response body
+  const token = jwt.sign({ id: owner._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+  const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.FORCE_INSECURE_COOKIES === 'true' ? false : true,
+    sameSite: 'None',
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+  };
+  if (process.env.COOKIE_DOMAIN && process.env.NODE_ENV === 'production') {
+    cookieOptions.domain = process.env.COOKIE_DOMAIN;
+  }
+  res.cookie('owner_jwt', token, cookieOptions);
+
+  res.status(200).json({ _id: owner._id, name: owner.name, email: owner.email, type: owner.type, profileImage: owner.profileImage, token });
 });
 
 // @route GET /api/owner/auth/me
