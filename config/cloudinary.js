@@ -1,0 +1,15 @@
+// Ensure environment variables from `.env` are loaded when this module runs.
+// This is important in local development where the process may not already
+// have the variables set by the parent shell.
+require('dotenv').config();
+
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true,
+});
+
+module.exports = cloudinary;
